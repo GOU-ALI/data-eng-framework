@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  spark-master:
+    build: ./spark
+    container_name: spark-master
+    ports:
+      - "8080:8080"
+      - "7077:7077"
+    environment:
+      - SPARK_MODE=master
+    volumes:
+      - ./spark/scripts:/opt/bitnami/spark/scripts
+
+  spark-worker:
+    build: ./spark
+    container_name: spark-worker
+    depends_on:
+      - spark-master
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+    volumes:
+      - ./spark/scripts:/opt/bitnami/spark/scripts
+
+  spark-thrift:
+    image: apache/spark:latest
+    container_name: spark-thrift
+    depends_on:
+      - spark-master
+    ports:
+      - "10000:10000"
+    command: >
+      /opt/spark/sbin/start-thriftserver.sh
+      --master spark://spark-master:7077
+
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    ports:
+      - "9000:9000"
+      - "9090:9090"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9090"
+    volumes:
+      - minio-data:/data
+
+  dbt:
+    image: ghcr.io/dbt-labs/dbt-core:latest
+    container_name: dbt
+    volumes:
+      - ./dbt:/usr/app/dbt
+    entrypoint: /bin/bash
+    tty: true
+
+volumes:
+  minio-data:

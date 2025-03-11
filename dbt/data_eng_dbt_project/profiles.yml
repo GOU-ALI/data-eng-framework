@@ -1,0 +1,9 @@
+data_eng_dbt_project:
+  target: dev
+  outputs:
+    dev:
+      type: spark
+      method: thrift
+      host: spark-master
+      port: 7077
+      schema: default

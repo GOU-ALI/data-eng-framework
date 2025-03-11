@@ -1,0 +1,8 @@
+# Ignore Docker generated files
+*.log
+*.pyc
+__pycache__/
+.cache
+data/
+.dbt/
+.idea/
